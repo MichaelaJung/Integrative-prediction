@@ -1,10 +1,11 @@
-
 ################################################################################
-############# Outlier detection methods for generalized lattices: ##############
-#############  A case study on the transition from ANOVA to REML  ##############
-#############    Bernal-Vasquez et al. (2016) Theor Appl Genet    ##############
-################################################################################
-#############           Adapted by Michaela Jung, 2024            ##############
+###                                                                          ###
+### Outlier detection methods for generalized lattices:                      ###
+### A case study on the transition from ANOVA to REML                        ###
+### Bernal-Vasquez et al. (2016) Theor Appl Genet                            ###
+###                                                                          ###
+### Adapted by Michaela Jung, 2024                                           ###
+###                                                                          ###
 ################################################################################
 
 outliers <- function(mydata, mytrait, mylm) {
