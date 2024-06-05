@@ -83,7 +83,7 @@ np.save("%s/pca.npy"%(data_dir), X_PCA)
 pheno = data.drop(['Year', 'END', 'START'], axis=1)
 traits = pheno.columns[2:]
 for trait in traits:
-    splits = pd.read_csv("Output/Intermediate/CV_Strategy/"+trait+"_CV.csv").columns[2:]
+    splits = pd.read_csv("Input/CV_Strategy/"+trait+"_CV.csv").columns[2:]
     # Filter the phenotype rows based on missing values 
     nan_mask_trait = np.isnan(pheno[trait])
     pheno_subset_trait = pheno[~nan_mask_trait].reset_index(drop=True)

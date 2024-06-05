@@ -84,7 +84,7 @@ for (trait in traits) {
   # Filter for NA and order to match CV template
   data_trait <- na.omit(data[,c("Envir", "Genotype", trait)])
   data_trait <- data_trait[order(data_trait$Envir,data_trait$Genotype),]
-  CV_strategy <- read.csv(paste0("Output/Intermediate/CV_Strategy/", trait,"_CV.csv"))
+  CV_strategy <- read.csv(paste0("Input/CV_Strategy/", trait,"_CV.csv"))
   CV_strategy <- CV_strategy[order(CV_strategy$Envir,CV_strategy$Genotype),]
   # Create a directory to save the 25 files if it does not exist
   save_dir = paste0("Output/Intermediate/GB_feature_selection/",trait)

@@ -11,10 +11,10 @@ from keras.models import Model
 concatenator_all = Concatenate(axis=-1)
 def model(time_steps, n_pca, n_snp, n_soil):
 
-    weather_input = Input(shape = (time_steps, 3))   
-    pca_input = Input(shape = (n_pca, ))  
-    snp_input = Input(shape = (n_snp, ))
-    soil_input = Input(shape = (n_soil,))
+    weather_input = Input(shape = (time_steps, 3), name = "Weather_Input")   
+    pca_input = Input(shape = (n_pca, ), name ="PCA_Input")  
+    snp_input = Input(shape = (n_snp, ), name = "SNP_Input")
+    soil_input = Input(shape = (n_soil,), name = "Soil_Input")
     
     # Encoder LSTM for weather
     lstm, state_h, state_c = LSTM(128, return_state=True, return_sequences=True)(weather_input)

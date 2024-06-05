@@ -35,7 +35,7 @@ for trait in traits:
     pheno_subset_trait = pheno[~nan_mask_trait].reset_index(drop=True)
     
     # Change CV template order to match Phenotype and all the other data 
-    cv_template = pd.read_csv("Output/Intermediate/CV_Strategy/"+trait+"_CV.csv")
+    cv_template = pd.read_csv("Input/CV_Strategy/"+trait+"_CV.csv")
     cv_template["ID_template"] = cv_template[['Envir','Genotype']].apply("-".join, axis = 1)
     cv_template.set_index('ID_template', inplace = True)
     pheno_subset_trait['ID_pheno'] = pheno_subset_trait[['Envir','Genotype']].apply("-".join, axis = 1)
