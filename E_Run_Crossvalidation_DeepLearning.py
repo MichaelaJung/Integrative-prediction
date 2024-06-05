@@ -162,7 +162,7 @@ for split in splits:
     
     # Compute interesting metrics
     rmse = sqrt(mean_squared_error(y_true, y_pred))
-    mae = sqrt(mean_absolute_error(y_true, y_pred))
+    mae = mean_absolute_error(y_true, y_pred)
     r2 = r2_score(y_true, y_pred)
     r = pearsonr(y_true, y_pred)[0]
     row = ["Split %s" % split, r, elapsed_time, r2, rmse, mae]
