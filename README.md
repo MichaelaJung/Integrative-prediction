@@ -2,7 +2,7 @@
 
 ## General description
 
-This respository contains the supporting code for the article "Integrative multi-environmental genomic prediction in apple" by Jung et al. It consists of two sets of scripts to be run sequentially (1-4; A-G) as well as scripts containing helper functions. Both sets perform genomic predictions of eleven different traits in apple using two different approaches: classical statistical methods (scripts 1-4) and deep learning (scripts A-G). The phenotypic, enviromic, and imputed genomic data formatted as input files for the provided code are available in Zenodo at (to be updated upon article publication).
+This respository contains the supporting code for the article "Integrative multi-environmental genomic prediction in apple" by Jung et al. It consists of two sets of scripts to be run sequentially (1-4; A-G) as well as scripts containing helper functions. Both sets perform genomic predictions of eleven different traits in apple using two different approaches: statistical methods (scripts 1-4) and deep learning (scripts A-G). The phenotypic, enviromic, and imputed genomic data formatted as input files for the provided code are available in Zenodo at (to be updated upon article publication).
 
 ## Statistical methods for genomic prediction
 
