@@ -4,7 +4,7 @@
 
 This respository contains the supporting code for the article "Integrative multi-environmental genomic prediction in apple" by Jung, Quesada-Traver, Roth, et al. It consists of two sets of scripts to be run sequentially (1-4; A-G) as well as scripts containing helper functions. Both sets perform genomic predictions of eleven different traits in apple using two different approaches: statistical methods (scripts 1-4) and deep learning (scripts A-G).
 
-## The folder Input
+## Input data
 
 To ensure code functionality, the phenotypic, enviromic, and imputed genomic data formatted as input files can be downlodaed into the folder Input from Zenodo at (to be updated upon article publication). The folder Input additionally contains the Supplementary table 3 from Jung et al. (2022) Horticulture Research listing SNPs associated with the studied traits. The subfolder CV1_Strategy contains the applied cross-validation strategy assigning individual genotypes into folds (i.e., splits). 
 
