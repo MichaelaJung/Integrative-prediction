@@ -23,6 +23,7 @@ library(readxl)
 importance_all <- read.csv("Output/Intermediate/GB_feature_selection/feature_selection_results.csv")
 
 # Load GWAS SNPs that have been previously linked to studied traits
+# Supplementary table 3 from Jung et al. (2022) Horticulture Research
 gwas_snps <- read_xls("Input/SupTable3_SNPS_GWAS.xls")[,1:2]
 
 # Rename traits to match the trait names in the analysis
