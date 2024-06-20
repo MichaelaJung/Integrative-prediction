@@ -6,7 +6,7 @@ This respository contains the supporting code for the article "Integrative multi
 
 ## Statistical methods for genomic prediction
 
-The results of the tested statistical genomic prediction models can be reproduced by sequentially running the scripts indexed from 1 to 4. The first two scripts perform operations to process data into the format required for model training. The third script performs genomic predictions integrating genomic and enviromic random effects. The fourth script integrates additive and dominance random effects and inbreeding as a fixed effect into the genomic prediction models.
+The outcomes of the tested statistical genomic prediction models can be reproduced by sequentially running the scripts indexed from 1 to 4. The first two scripts perform operations to process data into the format required for model training. The third script performs genomic predictions integrating genomic and enviromic random effects. The fourth script integrates additive and dominance random effects and inbreeding as a fixed effect into the genomic prediction models.
 
 ## Deep learning method for genomic prediction
 
