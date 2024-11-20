@@ -2,15 +2,15 @@
 
 ## General description
 
-This respository contains the supporting code for the article "Integrative multi-environmental genomic prediction in apple" by Jung, Quesada-Traver, Roth, et al. _Horticulture Research_ (2024). It consists of two sets of scripts to be run sequentially (1-4; A-G) as well as scripts containing helper functions. Both sets perform genomic predictions of eleven different traits in apple using two different approaches: statistical methods (scripts 1-4) and deep learning (scripts A-G).
+This respository contains the supporting code for the article "Integrative multi-environmental genomic prediction in apple" by Jung, Quesada-Traver, Roth, et al. (2024) _Horticulture Research_. It consists of two sets of scripts to be run sequentially (1-3; A-G) as well as scripts containing helper functions. Both sets perform genomic predictions of eleven different traits in apple using two different approaches: statistical methods (scripts 1-3) and deep learning (scripts A-G).
 
 ## Input data
 
-To ensure code functionality, the phenotypic, enviromic, and imputed genomic data formatted as input files can be downloaded into the folder Input from Zenodo at (to be updated upon article publication). The folder Input additionally contains the Supplementary table 3 from Jung et al. (2022) Horticulture Research listing SNPs associated with the studied traits. The subfolder CV1_Strategy contains the applied cross-validation strategy assigning individual genotypes into folds (i.e., splits). 
+To ensure code functionality, the phenotypic, enviromic, and imputed genomic data formatted as input files can be downloaded into the folder Input from Zenodo at (to be updated upon article publication). The folder Input additionally contains the Supplementary table 3 from Jung et al. (2022) _Horticulture Research_ listing SNPs associated with the studied traits. The subfolder CV1_Strategy contains the applied cross-validation strategy assigning individual genotypes into folds (i.e., splits). 
 
 ## Statistical methods for genomic prediction
 
-The outcomes of the tested statistical genomic prediction models can be reproduced by sequentially running the scripts indexed from 1 to 4. The first two scripts perform operations to process data into the format required for model training. The third script performs genomic predictions integrating genomic and enviromic random effects. The fourth script integrates additive and dominance random effects and inbreeding as a fixed effect into the genomic prediction models.
+The outcomes of the tested statistical genomic prediction models can be reproduced by sequentially running the scripts indexed from 1 to 3. The first two scripts perform operations to process data into the format required for model training. The third script performs genomic predictions integrating random effects for the standard genomic, additive genomic, dominance genomic, and enviromic relationship matrix and the fixed effect of inbreeding.
 
 ## Deep learning method for genomic prediction
 
