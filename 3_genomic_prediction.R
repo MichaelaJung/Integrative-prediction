@@ -1,6 +1,8 @@
 ################################################################################
 ###                                                                          ###
-### Genomic prediction integrating genomic and enviromic random effects      ###
+### Genomic prediction integrating random effects for the standard genomic,  ###
+### additive genomic, dominance genomic, and enviromic relationship matrix   ###
+### and the fixed effect of inbreeding                                       ###
 ###                                                                          ###
 ### by Michaela Jung, 2024                                                   ###
 ###                                                                          ###
@@ -17,7 +19,8 @@ library(EnvRtype)
 library(BGGE)
 
 # make directory for the output
-if (dir.exists("./Output/out_predictions")==FALSE) dir.create("./Output/out_predictions")
+outdir <- "./Output/out_predictions"
+if (dir.exists(outdir)==FALSE) dir.create(outdir)
 
 
 ###############################
@@ -26,6 +29,7 @@ if (dir.exists("./Output/out_predictions")==FALSE) dir.create("./Output/out_pred
 
 # source functions for the estimation of relationship matrices
 source("Relationship_matrices_G_W.R")
+source("Relationship_matrices_A_D.R")
 
 # load genomic data
 geno <- read.plink("./Input/SNPs_final_2022.bed",
@@ -47,18 +51,18 @@ load("./Output/W.Rdata")
 # nIter <- 10000    # numer of iterations
 # burnIn <- 1000    # burn-in
 # nThin <- 3        # thinning
-# testsetup <- "no" # run test setup following example settings (yes/no)
+# testsetup <- FALSE # run test setup following example settings (TRUE/FALSE)
 
 # example settings
 var <- 1             # trait no. 1
 run <- 1             # cross-validation repetition no. 1
-mymodel <- 2         # model to run
+mymodel <- 18        # model to run
 nfolds <- 5          # number of folds in cross-validation 
 nIter <- 50          # number of iterations
 burnIn <- 10         # burn-in
 nThin <- 2           # thinning
 X_subs <- 10         # number of markers to subset
-testsetup <- "yes"   # run test setup following example settings (yes/no)
+testsetup <- TRUE   # run test setup following example settings (TRUE/FALSE)
 
 
 #########################
@@ -75,7 +79,7 @@ pheno <- pheno[which(pheno$Trait %in% mytrait),c("Envir","Genotype","Value")]
 colnames(pheno)[3] <- "Trait"
 
 # test setup - subset data for fewer genotypes
-if (testsetup=="yes") { 
+if (testsetup==TRUE) { 
   pheno <- pheno[which(pheno$Genotype %in% unique(pheno$Genotype)[1:50]),]
 }
 
@@ -110,7 +114,7 @@ W <- W[, colSums(is.na(W)) != nrow(W)]
 X <- geno$genotypes@.Data
 
 # test setup - subset matrix for fewer markers
-if (testsetup=="yes") X <- X[,1:X_subs]
+if (testsetup==TRUE) X <- X[,1:X_subs]
 
 # numeric matrix of values 0, 1, 2
 class(X) <- "numeric"
@@ -124,7 +128,28 @@ v <- apply(X, 2, var)
 if (length(which(v == 0)) > 0) X <- X[,-which(v == 0)]
 
 # scale and center
+X1 <- X # save un-scaled matrix
 X <- scale(X, center = TRUE, scale = TRUE)
+
+
+#######################################
+### Estimate inbreeding coefficient ###
+#######################################
+
+# set all homozygotes to zero
+X2 <- X1
+X2[X2==2] <- 0
+
+# inbreeding coefficient as the proportion of homozygotes
+ic <- 1 - (rowSums(X2) / ncol(X2))
+
+# merge inbreeding coefficient with the phenotypic data
+# order genotypes as in the phenotypic data
+ic_df <- data.frame(Genotype=names(ic), IC=ic)
+pheno2 <- pheno
+pheno2$id <- 1:nrow(pheno2)
+pheno2 <- merge(pheno2, ic_df, all.x = TRUE)
+pheno2 <- pheno2[order(pheno2$id), ]
 
 
 ##################
@@ -176,7 +201,10 @@ for (fold in 1:nfolds) {
   ### FIXED EFFECTS ###
   
   # design matrix for the fixed effects of environments
-  Z_E <- model.matrix(~0+Envir,pheno)
+  Z_E <- model.matrix(~0+Envir, pheno)
+  
+  # design matrix for the fixed effects of environments and inbreeding coefficient
+  if(mymodel %in% c(19, 20)) Z_E <- model.matrix(~0+Envir+IC, pheno2)
   
   
   ### MODEL STRUCTURES ###
@@ -184,19 +212,22 @@ for (fold in 1:nfolds) {
   # measure time to define model structures and fit the model
   start_time <- Sys.time()
   
-  # relationship matrices based on G-BLUP
+  # standard genomic and enviromic relationship matrices based on G-BLUP
+  # G
   if (mymodel == 1) {
     K_A <- GB_Kernel(X = X, is.center = TRUE)
     K_A <- list(A = K_A)
     K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'MM')
   }
+  # G+G×E
   if (mymodel == 2) {
     K_A <- GB_Kernel(X = X, is.center = TRUE)
     K_A <- list(A = K_A)
     K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'MDs')
   }
+  # G+W
   if (mymodel == 3) {
     K_A <- GB_Kernel(X = X, is.center = TRUE)
     K_A <- list(A = K_A)
@@ -204,6 +235,7 @@ for (fold in 1:nfolds) {
     K <- get_kernel(K_G = K_A, K_E = K_W, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'EMM')
   }
+  # G+W+G×W
   if (mymodel == 4) {
     K_A <- GB_Kernel(X = X, is.center = TRUE)
     K_A <- list(A = K_A)
@@ -211,6 +243,7 @@ for (fold in 1:nfolds) {
     K <- get_kernel(K_G = K_A, K_E = K_W, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'RNMM')
   }
+  # G+G×E+W+G×W
   if (mymodel == 5) {
     K_A <- GB_Kernel(X = X, is.center = TRUE)
     K_A <- list(A = K_A)
@@ -219,19 +252,22 @@ for (fold in 1:nfolds) {
                     y='Trait', data = pheno, model = 'RNMDs')
   }
   
-  # relationship matrices based on Gaussian kernel
+  # standard genomic and enviromic relationship matrices based on Gaussian kernel
+  # G (GK)
   if (mymodel == 6) {
     K_G   <- GK_Kernel(X = list(A=X))
     K_A   <- list(A = K_G$A)
     K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'MM')
   }
+  # G+G×E (GK)
   if (mymodel == 7) {
     K_G   <- GK_Kernel(X = list(A=X))
     K_A   <- list(A = K_G$A)
     K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'MDs')
   }
+  # G+W (GK)
   if (mymodel == 8) {
     K_G   <- GK_Kernel(X = list(A=X))
     K_A   <- list(A = K_G$A)
@@ -239,6 +275,7 @@ for (fold in 1:nfolds) {
     K <- get_kernel(K_G = K_A, K_E = K_W, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'EMM')
   }
+  # G+W+G×W (GK)
   if (mymodel == 9) {
     K_G   <- GK_Kernel(X = list(A=X))
     K_A   <- list(A = K_G$A)
@@ -246,6 +283,7 @@ for (fold in 1:nfolds) {
     K <- get_kernel(K_G = K_A, K_E = K_W, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'RNMM')
   }
+  # G+G×E+W+G×W (GK)
   if (mymodel == 10) {
     K_G   <- GK_Kernel(X = list(A=X))
     K_A   <- list(A = K_G$A)
@@ -254,34 +292,84 @@ for (fold in 1:nfolds) {
                     y='Trait', data = pheno, model = 'RNMDs')
   }
   
-  # relationship matrices based on Deep kernel
+  # standard genomic and enviromic relationship matrices based on Deep kernel
+  # G (DK)
   if (mymodel == 11) {
     K_A  <- get_GC1(M = list(A=X))
     K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'MM')
   }
+  # G+G×E (DK)
   if (mymodel == 12) {
     K_A  <- get_GC1(M = list(A=X))
     K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'MDs')
   }
+  # G+W (DK)
   if (mymodel == 13) {
     K_A  <- get_GC1(M = list(A=X))
     K_W  <- get_GC1(M = list(W=W))
     K <- get_kernel(K_G = K_A, K_E = K_W, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'EMM')
   }
+  # G+W+G×W (DK)
   if (mymodel == 14) {
     K_A  <- get_GC1(M = list(A=X))
     K_W  <- get_GC1(M = list(W=W))
     K <- get_kernel(K_G = K_A, K_E = K_W, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'RNMM')
   }
+  # G+G×E+W+G×W (DK)
   if (mymodel == 15) {
     K_A  <- get_GC1(M = list(A=X))
     K_W  <- get_GC1(M = list(W=W))
     K <- get_kernel(K_G = K_A, K_E = K_W, env = 'Envir', gid='Genotype',
                     y='Trait', data = pheno, model = 'RNMDs')
+  }
+  
+  # additive genomic relationship matrix based on G-BLUP
+  # A
+  if (mymodel == 16) {
+    K_A <- G.matrix(A.matrix(X1))
+    K_A <- list(A = K_A)
+    K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype', 
+                    y='Trait', data = pheno, model = 'MM')
+  }
+  
+  # standard genomic and dominance genomic relationship matrices based on G-BLUP
+  # G+D
+  if (mymodel == 17) {
+    K_A <- GB_Kernel(X = X, is.center = TRUE)
+    K_D <- G.matrix(D.matrix(X1))
+    K_G <- list(A = K_A, D = K_D)
+    K <- get_kernel(K_G = K_G, K_E = NULL, env = 'Envir', gid='Genotype', 
+                    y='Trait', data = pheno, model = 'MM')
+  }
+  # G+G×E+D+D×E
+  if (mymodel == 18) {
+    K_A <- GB_Kernel(X = X, is.center = TRUE)
+    K_D <- G.matrix(D.matrix(X1))
+    K_G <- list(A = K_A, D = K_D)
+    K <- get_kernel(K_G = K_G, K_E = NULL, env = 'Envir', gid='Genotype', 
+                    y='Trait', data = pheno, model = 'MDs')
+  }
+  
+  # standard genomic and dominance genomic relationship matrices based on G-BLUP
+  # fixed effects of inbreeding
+  # G (inb)
+  if (mymodel == 19) {
+    K_A <- GB_Kernel(X = X, is.center = TRUE)
+    K_A <- list(A = K_A)
+    K <- get_kernel(K_G = K_A, K_E = NULL, env = 'Envir', gid='Genotype',
+                    y='Trait', data = pheno, model = 'MM')
+  }
+  # G+D (inb)
+  if (mymodel == 20) {
+    K_A <- GB_Kernel(X = X, is.center = TRUE)
+    K_D <- G.matrix(D.matrix(X1))
+    K_G <- list(A = K_A, D = K_D)
+    K <- get_kernel(K_G = K_G, K_E = NULL, env = 'Envir', gid='Genotype', 
+                    y='Trait', data = pheno, model = 'MM')
   }
   
   
@@ -293,7 +381,7 @@ for (fold in 1:nfolds) {
   
   # end time measurement
   end_time <- Sys.time()
-
+  
   
   ### OUTPUT ###
   
@@ -310,7 +398,7 @@ for (fold in 1:nfolds) {
   pheno_val <- pheno[which(pheno$Genotype %in% genoID_val), ]
   
   # obtain summary statistics - variances and time
-  if (mymodel %in% c(1,6,11)) {
+  if (mymodel %in% c(1,6,11,19)) {
     out1 <- rbind(out1, c(fit$K$KG_G$varu, fit$varE,
                           fold, mytime))
     colnames(out1) <- c("varG", "varRes",
@@ -344,6 +432,28 @@ for (fold in 1:nfolds) {
                           fit$K$KGE_AW$varu, fit$varE,
                           fold, mytime))
     colnames(out1) <- c("varG", "var_GE","var_W","var_GW", "varRes",
+                        "Fold", "Time")
+  }
+  
+  if (mymodel == 16) {
+    out1 <- rbind(out1, c(fit$K$KG_G$varu, fit$varE,
+                          fold, mytime))
+    colnames(out1) <- c("varG_A", "varRes",
+                        "Fold", "Time")
+  }
+  
+  if (mymodel %in% c(17,20) ) {
+    out1 <- rbind(out1, c(fit$K$KG_G_A$varu, fit$K$KG_G_D$varu, fit$varE,
+                          fold, mytime))
+    colnames(out1) <- c("varG_A", "varG_D", "varRes",
+                        "Fold", "Time")
+  }
+  
+  if (mymodel == 18) {
+    out1 <- rbind(out1, c(fit$K$KG_G_A$varu, fit$K$KG_G_D$varu,
+                          fit$K$KG_GE_A$varu, fit$K$KG_GE_D$varu, fit$varE,
+                          fold, mytime))
+    colnames(out1) <- c("varG_A", "varG_D", "varGE_A", "varGE_D", "varRes",
                         "Fold", "Time")
   }
   
@@ -387,19 +497,16 @@ out2$Run <- run
 out3$Run <- run
 
 # save output
-write.table(out1, file = paste0("./Output/out_predictions/statistics_G_W_", mytrait, 
-                                "_model_", mymodel,
-                                "_run", run, ".txt"),
+write.table(out1, file = paste0(outdir, "/statistics_", mytrait, "_model_",
+                                mymodel, "_run", run, ".txt"),
             quote = FALSE, row.names = FALSE)
 
-write.table(out2, file = paste0("./Output/out_predictions/predictions_G_W_", mytrait,
-                                "_model_", mymodel,
-                                "_run_", run, ".txt"),
+write.table(out2, file = paste0(outdir, "/predictions_", mytrait, "_model_",
+                                mymodel, "_run_", run, ".txt"),
             quote = FALSE, row.names = FALSE)
 
 colnames(out3)[1:2] <- c("r", "Envir")
-write.table(out3, file = paste0("./Output/out_predictions/correlations_G_W_", mytrait,
-                                "_model_", mymodel,
-                                "_run", run, ".txt"),
+write.table(out3, file = paste0(outdir, "/correlations_", mytrait, "_model_",
+                                mymodel, "_run", run, ".txt"),
             quote = FALSE, row.names = FALSE)
 
