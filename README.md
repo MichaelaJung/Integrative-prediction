@@ -6,7 +6,7 @@ This respository contains the supporting code for the article "Integrative multi
 
 ## Input data
 
-To ensure code functionality, the phenotypic, enviromic, and imputed genomic data formatted as input files can be downloaded into the folder Input from Zenodo at (to be updated upon article publication). The folder Input additionally contains the Supplementary table 3 from Jung et al. (2022) _Horticulture Research_ listing SNPs associated with the studied traits. The subfolder CV1_Strategy contains the applied cross-validation strategy assigning individual genotypes into folds (i.e., splits). 
+To ensure code functionality, the phenotypic, enviromic, and imputed genomic data formatted as input files can be downloaded into the folder Input from Zenodo at https://doi.org/10.5281/zenodo.14191209. The folder Input additionally contains the Supplementary table 3 from Jung et al. (2022) _Horticulture Research_ listing SNPs associated with the studied traits. The subfolder CV1_Strategy contains the applied cross-validation strategy assigning individual genotypes into folds (i.e., splits).
 
 ## Statistical methods for genomic prediction
 
